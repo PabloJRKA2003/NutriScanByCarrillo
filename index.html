@@ -2,135 +2,337 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cámara Web en Alta Resolución</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NutriScan Pro - Dashboard & Scanner</title>
   <style>
+    :root {
+      --bg-primary: #0f172a;
+      --card-bg: #1e293b;
+      --accent-blue: #2563eb;
+      --accent-green: #10b981;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border-color: #334155;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding-bottom: 80px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
+      padding: 8px 0;
     }
 
-    .contenedor {
-      width: 100%;
-      max-width: 900px;
-      text-align: center;
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
+    .badge {
+      background: rgba(37, 99, 235, 0.2);
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
+      border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
-    .video-wrapper {
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 18px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Módulo de Cámara / Escáner OCR */
+    .scanner-container {
       position: relative;
       width: 100%;
-      background-color: #000000;
+      aspect-ratio: 4 / 3;
+      background-color: #000;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      border: 1px solid #334155;
+      border: 1px solid var(--border-color);
     }
 
     video {
       width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
+      height: 100%;
       object-fit: cover;
       display: block;
-      /* Efecto espejo para selfies */
-      transform: scaleX(-1);
-      /* Optimización de nitidez */
-      image-rendering: -webkit-optimize-contrast;
+      transition: transform 0.2s;
     }
 
-    .info-status {
-      margin-top: 15px;
+    video.espejo {
+      transform: scaleX(-1);
+    }
+
+    /* Marco guía táctil tipo iOS */
+    .scan-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 2px dashed rgba(56, 189, 248, 0.5);
+      margin: 20px;
+      border-radius: 12px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scan-overlay span {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
       font-size: 0.9rem;
-      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background-color: #334155;
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background-color: var(--accent-green);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .status-text {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      text-align: center;
+    }
+
+    /* Previsualización de Captura */
+    .preview-box {
+      margin-top: 14px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .preview-box img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--accent-blue);
+    }
+
+    canvas {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <div class="contenedor">
-    <h1>Vista de Cámara</h1>
-    
-    <div class="video-wrapper">
-      <video id="webcam" autoplay playsinline muted></video>
-    </div>
+  <div class="app-container">
+    <header>
+      <h1>NutriScan Pro</h1>
+      <span class="badge">iOS 18 Edition</span>
+    </header>
 
-    <p id="status" class="info-status">Cargando cámara...</p>
+    <!-- Seccion de Camara y OCR -->
+    <section class="card">
+      <div class="card-title">
+        <span>📸</span> Escáner Nutricional OCR
+      </div>
+
+      <div class="scanner-container">
+        <video id="webcam" autoplay playsinline muted class="espejo"></video>
+        <div class="scan-overlay">
+          <span>Apunta a la etiqueta</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button id="btnCambiar" class="btn btn-secondary">
+          🔄 Cambiar Cámara
+        </button>
+        <button id="btnCapturar" class="btn btn-primary">
+          📷 Escanear
+        </button>
+      </div>
+
+      <p id="status" class="status-text">Iniciando cámara...</p>
+
+      <div id="previewContainer" class="preview-box">
+        <span style="font-size: 0.8rem; color: #38bdf8;">Captura enviada a procesamiento:</span>
+        <img id="fotoPreview" alt="Captura de etiqueta">
+      </div>
+    </section>
   </div>
+
+  <canvas id="canvas"></canvas>
 
   <script>
     const video = document.getElementById('webcam');
+    const btnCambiar = document.getElementById('btnCambiar');
+    const btnCapturar = document.getElementById('btnCapturar');
     const statusText = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const fotoPreview = document.getElementById('fotoPreview');
+    const previewContainer = document.getElementById('previewContainer');
 
-    // Configuración para pedir Alta Resolución (Full HD / HD)
-    const opcionesCamaraHD = {
-      video: {
-        width: { min: 1280, ideal: 1920 },
-        height: { min: 720, ideal: 1080 },
-        frameRate: { ideal: 30, max: 60 },
-        facingMode: "user"
-      },
-      audio: false
-    };
+    let streamActual = null;
+    let modoCamara = 'environment'; // Inicia en la cámara trasera por defecto
 
     async function iniciarCamara() {
+      if (streamActual) {
+        streamActual.getTracks().forEach(track => track.stop());
+      }
+
+      const opcionesCamara = {
+        video: {
+          facingMode: modoCamara,
+          width: { min: 640, ideal: 1920 },
+          height: { min: 480, ideal: 1080 },
+          frameRate: { ideal: 30 }
+        },
+        audio: false
+      };
+
       try {
-        // Intentar cargar cámara en alta resolución
-        const stream = await navigator.mediaDevices.getUserMedia(opcionesCamaraHD);
-        aplicarStream(stream);
+        streamActual = await navigator.mediaDevices.getUserMedia(opcionesCamara);
+        aplicarStream(streamActual);
       } catch (err) {
-        console.warn("No se pudo iniciar en HD, cargando modo estándar compatible:", err);
-        intentarCamaraEstandar();
+        console.warn("Configuración HD no soportada, intentando estándar:", err);
+        fallbackCamara();
       }
     }
 
-    function intentarCamaraEstandar() {
-      // Respaldo en resolución estándar si el dispositivo no soporta HD
-      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    function fallbackCamara() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: modoCamara }, audio: false })
         .then(stream => {
+          streamActual = stream;
           aplicarStream(stream);
         })
         .catch(err => {
-          console.error("Error definitivo al acceder a la cámara:", err);
-          statusText.innerText = "Error: No se pudo acceder a la cámara. Revisa los permisos.";
+          console.error("Error al acceder a la cámara:", err);
+          statusText.innerText = "Error: Acceso a cámara denegado o no disponible.";
           statusText.style.color = "#f87171";
         });
     }
 
     function aplicarStream(stream) {
       video.srcObject = stream;
-      
+
+      // Aplicar efecto espejo solo si se activa la frontal
+      if (modoCamara === 'user') {
+        video.classList.add('espejo');
+      } else {
+        video.classList.remove('espejo');
+      }
+
       const track = stream.getVideoTracks()[0];
       const config = track.getSettings();
-      
+      const tipoCamaraText = modoCamara === 'user' ? 'Frontal' : 'Trasera';
+
       if (config.width && config.height) {
-        statusText.innerText = `Cámara activa (${config.width}x${config.height} px)`;
+        statusText.innerText = `Cámara ${tipoCamaraText} lista (${config.width}x${config.height} px)`;
       } else {
-        statusText.innerText = "Cámara activa";
+        statusText.innerText = `Cámara ${tipoCamaraText} lista`;
       }
+      statusText.style.color = "#94a3b8";
     }
 
-    // Iniciar cámara al cargar la página
+    // Evento cambiar cámara
+    btnCambiar.addEventListener('click', () => {
+      modoCamara = (modoCamara === 'user') ? 'environment' : 'user';
+      statusText.innerText = "Cambiando cámara...";
+      iniciarCamara();
+    });
+
+    // Evento capturar foto para escaneo
+    btnCapturar.addEventListener('click', () => {
+      if (!video.videoWidth) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (modoCamara === 'user') {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      fotoPreview.src = canvas.toDataURL('image/png');
+      previewContainer.style.display = 'flex';
+      statusText.innerText = "¡Etiqueta capturada correctamente!";
+      statusText.style.color = "#10b981";
+    });
+
+    // Cargar al inicio
     iniciarCamara();
   </script>
-
 </body>
 </html>
