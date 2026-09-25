@@ -69,7 +69,7 @@
       border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
-    /* Generic Cards */
+    /* Cards */
     .card {
       background: var(--card-bg);
       border-radius: 20px;
@@ -123,8 +123,6 @@
     }
 
     .ring-kcal { stroke: var(--accent-orange); }
-    .ring-protein { stroke: var(--accent-cyan); }
-    .ring-carbs { stroke: var(--accent-green); }
 
     .ring-center-text {
       position: absolute;
@@ -185,18 +183,30 @@
       border-radius: 16px;
       overflow: hidden;
       border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     video {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      display: none;
       transition: transform 0.2s;
     }
 
     video.espejo {
       transform: scaleX(-1);
+    }
+
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-sub);
+      font-size: 0.85rem;
     }
 
     .scan-overlay {
@@ -206,7 +216,7 @@
       margin: 18px;
       border-radius: 12px;
       pointer-events: none;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
     }
@@ -248,6 +258,7 @@
     .btn-secondary { background-color: #243048; color: var(--text-main); }
     .btn-primary { background-color: var(--accent-green); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
     .btn-danger { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+    .btn-toggle-on { background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
 
     .status-text {
       margin-top: 10px;
@@ -256,20 +267,64 @@
       text-align: center;
     }
 
-    .preview-box {
+    /* Portion Adjuster Card */
+    .portion-box {
       margin-top: 14px;
       display: none;
       flex-direction: column;
+      gap: 12px;
+      background: #1a2336;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--accent-cyan);
+    }
+
+    .portion-header {
+      display: flex;
+      gap: 12px;
       align-items: center;
+    }
+
+    .portion-header img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .portion-inputs {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
 
-    .preview-box img {
-      width: 100%;
-      max-height: 180px;
-      object-fit: cover;
-      border-radius: 12px;
-      border: 1px solid var(--accent-cyan);
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-row label {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .input-row input {
+      width: 90px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 8px;
+      text-align: right;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .summary-text {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
     }
 
     /* Editable Pantry List */
@@ -309,28 +364,6 @@
       padding: 4px 8px;
     }
 
-    /* TDEE Calculator Controls */
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    .input-group label {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-    }
-
-    .input-group input, .input-group select {
-      background: #1a2336;
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-    }
-
     canvas { display: none; }
   </style>
 </head>
@@ -346,7 +379,7 @@
     <section class="card">
       <div class="card-title">
         <span>🔥 Resumen Diario</span>
-        <button id="btnResetDemo" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Reiniciar Demo</button>
+        <button id="btnResetDemo" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Reiniciar</button>
       </div>
 
       <div class="rings-grid">
@@ -393,62 +426,70 @@
     <section class="card">
       <div class="card-title">
         <span>📸 Escáner OCR en Vivo</span>
+        <button id="btnToggleCamara" class="btn btn-toggle-on" style="padding: 4px 10px; font-size: 0.75rem;">📷 Encender Cámara</button>
       </div>
 
       <div class="scanner-container">
+        <div id="cameraPlaceholder" class="camera-placeholder">
+          <span>📷 Cámara Apagada</span>
+          <span style="font-size: 0.7rem; color: var(--text-sub);">Presiona el botón superior para activarla</span>
+        </div>
         <video id="webcam" autoplay playsinline muted></video>
-        <div class="scan-overlay">
+        <div id="scanOverlay" class="scan-overlay">
           <span>Apunta a la tabla nutricional</span>
         </div>
       </div>
 
       <div class="controls-row">
-        <button id="btnCambiar" class="btn btn-secondary">🔄 Lente</button>
-        <button id="btnCapturar" class="btn btn-primary">📷 Escanear Producto</button>
+        <button id="btnCambiar" class="btn btn-secondary" disabled>🔄 Lente</button>
+        <button id="btnCapturar" class="btn btn-primary" disabled>📷 Capturar OCR</button>
       </div>
 
-      <p id="status" class="status-text">Detectando sensores del teléfono...</p>
+      <p id="status" class="status-text">Cámara en reposo.</p>
 
-      <div id="previewContainer" class="preview-box">
-        <span style="font-size: 0.75rem; color: var(--accent-cyan);">Último ítem procesado:</span>
-        <img id="fotoPreview" alt="Captura OCR">
+      <!-- Panel de ajuste de porción / retocar valores -->
+      <div id="portionBox" class="portion-box">
+        <div class="portion-header">
+          <img id="fotoPreview" alt="Captura Producto">
+          <div>
+            <h4 id="scannedName" style="font-size: 0.95rem;">Proteína de Suero (OCR)</h4>
+            <p style="font-size: 0.75rem; color: var(--text-sub);">Base estimada x 100g</p>
+          </div>
+        </div>
+
+        <div class="portion-inputs">
+          <div class="input-row">
+            <label for="inputGramos">Cantidad consumida (g):</label>
+            <input type="number" id="inputGramos" value="100" min="1" step="5">
+          </div>
+          <div class="summary-text" id="calculatedMacros">
+            Calculado: 380 kcal | P: 80g | C: 6g | G: 4g
+          </div>
+        </div>
+
+        <button id="btnAgregarLog" class="btn btn-primary" style="margin-top: 4px;">✅ Añadir al Diario</button>
       </div>
     </section>
 
-    <!-- Editable Pantry System -->
+    <!-- Despensa -->
     <section class="card">
       <div class="card-title">
         <span>📦 Despensa & Registros</span>
         <span id="itemCount" style="font-size: 0.8rem; color: var(--text-sub);">3 ítems</span>
       </div>
 
-      <div id="pantryContainer" class="pantry-list">
-        <!-- Inyectado dinámicamente -->
-      </div>
-    </section>
-
-    <!-- Biometric Calculator (TDEE) -->
-    <section class="card">
-      <div class="card-title">
-        <span>⚙️ Configuración TDEE / Metas</span>
-      </div>
-      <div class="input-group">
-        <label for="goalSelect">Objetivo Calórico</label>
-        <select id="goalSelect">
-          <option value=" deficit">Déficit Calórico (-20%)</option>
-          <option value="mantenimiento" selected>Mantenimiento</option>
-          <option value="volumen">Volumen / Superávit (+15%)</option>
-        </select>
-      </div>
+      <div id="pantryContainer" class="pantry-list"></div>
     </section>
   </div>
 
   <canvas id="canvas"></canvas>
 
   <script>
-    // --- ESTADO INICIAL DE LA DEMO (Zero-State para inversores) ---
+    // --- ESTADO Y VALORES BASE POR 100g ---
     let logActual = { kcal: 0, prot: 0, carb: 0, fat: 0 };
     const metas = { kcal: 2200, prot: 160, carb: 220, fat: 70 };
+
+    let baseScannedItem = { kcalPer100: 380, protPer100: 80, carbPer100: 6, fatPer100: 4 };
 
     let despensa = [
       { id: 1, nombre: "Avena Integral", kcal: 380, prot: 13, carb: 68, fat: 7 },
@@ -456,20 +497,20 @@
       { id: 3, nombre: "Yogur Griego 0%", kcal: 59, prot: 10, carb: 4, fat: 0.4 }
     ];
 
-    // --- ACTUALIZACIÓN DE UI Y ANILLOS ---
+    // --- UI Y ANILLOS ---
     function actualizarRings() {
-      document.getElementById('kcalVal').innerText = logActual.kcal;
+      document.getElementById('kcalVal').innerText = Math.round(logActual.kcal);
       const pctKcal = Math.min(logActual.kcal / metas.kcal, 1);
       const dashoffset = 283 - (283 * pctKcal);
       document.getElementById('ringKcal').style.strokeDashoffset = dashoffset;
 
-      document.getElementById('protTxt').innerText = `${logActual.prot} / ${metas.prot}g`;
+      document.getElementById('protTxt').innerText = `${Math.round(logActual.prot)} / ${metas.prot}g`;
       document.getElementById('barProt').style.width = `${Math.min((logActual.prot / metas.prot) * 100, 100)}%`;
 
-      document.getElementById('carbTxt').innerText = `${logActual.carb} / ${metas.carb}g`;
+      document.getElementById('carbTxt').innerText = `${Math.round(logActual.carb)} / ${metas.carb}g`;
       document.getElementById('barCarb').style.width = `${Math.min((logActual.carb / metas.carb) * 100, 100)}%`;
 
-      document.getElementById('fatTxt').innerText = `${logActual.fat} / ${metas.fat}g`;
+      document.getElementById('fatTxt').innerText = `${Math.round(logActual.fat)} / ${metas.fat}g`;
       document.getElementById('barFat').style.width = `${Math.min((logActual.fat / metas.fat) * 100, 100)}%`;
     }
 
@@ -484,7 +525,7 @@
         div.innerHTML = `
           <div class="pantry-item-info">
             <h4>${item.nombre}</h4>
-            <p>${item.kcal} kcal | P: ${item.prot}g C: ${item.carb}g G: ${item.fat}g</p>
+            <p>${Math.round(item.kcal)} kcal | P: ${Math.round(item.prot)}g C: ${Math.round(item.carb)}g G: ${Math.round(item.fat)}g</p>
           </div>
           <button class="delete-btn" onclick="eliminarItem(${item.id})">🗑️</button>
         `;
@@ -500,23 +541,39 @@
     document.getElementById('btnResetDemo').addEventListener('click', () => {
       logActual = { kcal: 0, prot: 0, carb: 0, fat: 0 };
       actualizarRings();
-      document.getElementById('previewContainer').style.display = 'none';
+      document.getElementById('portionBox').style.display = 'none';
     });
 
-    // --- LÓGICA DE CÁMARA ROBUSTA PARA IPHONE ---
+    // --- CÁMARA ROBUSTA CON CONTROL ON/OFF ---
     const video = document.getElementById('webcam');
+    const btnToggleCamara = document.getElementById('btnToggleCamara');
     const btnCambiar = document.getElementById('btnCambiar');
     const btnCapturar = document.getElementById('btnCapturar');
     const statusText = document.getElementById('status');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const scanOverlay = document.getElementById('scanOverlay');
     const canvas = document.getElementById('canvas');
     const fotoPreview = document.getElementById('fotoPreview');
-    const previewContainer = document.getElementById('previewContainer');
+    const portionBox = document.getElementById('portionBox');
+    const inputGramos = document.getElementById('inputGramos');
+    const calculatedMacros = document.getElementById('calculatedMacros');
+    const btnAgregarLog = document.getElementById('btnAgregarLog');
 
     let streamActual = null;
     let dispositivosVideo = [];
     let indiceCamaraActual = 0;
+    let camaraEncendida = false;
 
-    async function obtenerCamaras() {
+    async function toggleCamara() {
+      if (camaraEncendida) {
+        apagarCamara();
+      } else {
+        await encenderCamara();
+      }
+    }
+
+    async function encenderCamara() {
+      statusText.innerText = "Iniciando cámara...";
       try {
         const primerStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         primerStream.getTracks().forEach(t => t.stop());
@@ -536,11 +593,37 @@
         );
 
         indiceCamaraActual = (indiceTrasera !== -1) ? indiceTrasera : (dispositivosVideo.length - 1);
-        iniciarCamaraPorId(dispositivosVideo[indiceCamaraActual].deviceId);
+        await iniciarCamaraPorId(dispositivosVideo[indiceCamaraActual].deviceId);
+        
+        camaraEncendida = true;
+        btnToggleCamara.innerText = "🔴 Apagar Cámara";
+        btnToggleCamara.className = "btn btn-danger";
+        btnCambiar.disabled = dispositivosVideo.length <= 1;
+        btnCapturar.disabled = false;
+        cameraPlaceholder.style.display = 'none';
+        video.style.display = 'block';
+        scanOverlay.style.display = 'flex';
       } catch (err) {
         console.error(err);
-        statusText.innerText = "Acceso a la cámara denegado.";
+        statusText.innerText = "Acceso a cámara denegado o no disponible.";
       }
+    }
+
+    function apagarCamara() {
+      if (streamActual) {
+        streamActual.getTracks().forEach(t => t.stop());
+        streamActual = null;
+      }
+      camaraEncendida = false;
+      btnToggleCamara.innerText = "📷 Encender Cámara";
+      btnToggleCamara.className = "btn btn-toggle-on";
+      btnCambiar.disabled = true;
+      btnCapturar.disabled = true;
+      video.style.display = 'none';
+      scanOverlay.style.display = 'none';
+      cameraPlaceholder.style.display = 'flex';
+      statusText.innerText = "Cámara en reposo.";
+      statusText.style.color = "var(--text-sub)";
     }
 
     async function iniciarCamaraPorId(deviceId) {
@@ -569,9 +652,11 @@
       else video.classList.remove('espejo');
 
       const config = track.getSettings();
-      statusText.innerText = `Cámara Lista: ${track.label || 'Sensor'} (${config.width || 1280}x${config.height || 720}px)`;
+      statusText.innerText = `Lente activa: ${track.label || 'Sensor'} (${config.width || 1280}x${config.height || 720}px)`;
       statusText.style.color = "#10b981";
     }
+
+    btnToggleCamara.addEventListener('click', toggleCamara);
 
     btnCambiar.addEventListener('click', () => {
       if (dispositivosVideo.length <= 1) return;
@@ -580,6 +665,7 @@
       iniciarCamaraPorId(dispositivosVideo[indiceCamaraActual].deviceId);
     });
 
+    // --- CAPTURA DE FOTO Y MODO RETOQUE ---
     btnCapturar.addEventListener('click', () => {
       if (!video.videoWidth) return;
 
@@ -594,22 +680,58 @@
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       fotoPreview.src = canvas.toDataURL('image/png');
-      previewContainer.style.display = 'flex';
 
-      // Simulador de OCR: Suma un alimento procesado al log
-      logActual.kcal += 240;
-      logActual.prot += 20;
-      logActual.carb += 30;
-      logActual.fat += 5;
+      // Muestra panel para retocar sin añadir de inmediato
+      portionBox.style.display = 'flex';
+      inputGramos.value = 100;
+      recalcularValoresTemp();
+
+      statusText.innerText = "Ajusta la cantidad consumida y confirma.";
+    });
+
+    // --- CÁLCULO DINÁMICO SEGÚN GRAMOS ---
+    function recalcularValoresTemp() {
+      const gramos = parseFloat(inputGramos.value) || 0;
+      const factor = gramos / 100;
+
+      const kcalTemp = Math.round(baseScannedItem.kcalPer100 * factor);
+      const protTemp = Math.round(baseScannedItem.protPer100 * factor);
+      const carbTemp = Math.round(baseScannedItem.carbPer100 * factor);
+      const fatTemp = Math.round(baseScannedItem.fatPer100 * factor);
+
+      calculatedMacros.innerText = `Total: ${kcalTemp} kcal | P: ${protTemp}g | C: ${carbTemp}g | G: ${fatTemp}g`;
+      return { kcal: kcalTemp, prot: protTemp, carb: carbTemp, fat: fatTemp, gramos };
+    }
+
+    inputGramos.addEventListener('input', recalcularValoresTemp);
+
+    btnAgregarLog.addEventListener('click', () => {
+      const final = recalcularValoresTemp();
+      logActual.kcal += final.kcal;
+      logActual.prot += final.prot;
+      logActual.carb += final.carb;
+      logActual.fat += final.fat;
+
       actualizarRings();
 
-      statusText.innerText = "¡OCR Escaneado: +240 kcal agregadas!";
+      // Guardar también en la lista de despensa/registros
+      despensa.unshift({
+        id: Date.now(),
+        nombre: `OCR Producto (${final.gramos}g)`,
+        kcal: final.kcal,
+        prot: final.prot,
+        carb: final.carb,
+        fat: final.fat
+      });
+      renderDespensa();
+
+      portionBox.style.display = 'none';
+      statusText.innerText = `¡Añadidos ${final.gramos}g correctamente!`;
     });
 
     // Inicializar app
     actualizarRings();
     renderDespensa();
-    obtenerCamaras();
   </script>
 </body>
 </html>
