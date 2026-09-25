@@ -1,763 +1,136 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NutriScan Pro - Investor Demo</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        ios: {
-                            bg: '#000000',
-                            card: '#1c1c1e',
-                            green: '#30d158',
-                            cyan: '#64d2ff',
-                            red: '#ff453a',
-                            yellow: '#ffd60a'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cámara Web en Alta Resolución</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-            background-color: #0b0c10;
-            color: #f2f2f7;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-        .glass-card {
-            background: rgba(28, 28, 30, 0.75);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+    .contenedor {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
 
-        .glass-nav {
-            background: rgba(20, 20, 22, 0.85);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
 
-        @keyframes scanLaser {
-            0% { top: 5%; opacity: 0.8; }
-            50% { top: 90%; opacity: 1; }
-            100% { top: 5%; opacity: 0.8; }
-        }
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      background-color: #000000;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid #334155;
+    }
 
-        .scan-laser-line {
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent 0%, #30d158 50%, transparent 100%);
-            box-shadow: 0 0 15px #30d158, 0 0 30px #30d158;
-            animation: scanLaser 2.2s ease-in-out infinite;
-        }
+    video {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      /* Efecto espejo para selfies */
+      transform: scaleX(-1);
+      /* Optimización de nitidez */
+      image-rendering: -webkit-optimize-contrast;
+    }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .ring-bg { stroke: rgba(255, 255, 255, 0.08); }
-        .ring-circle {
-            transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            stroke-linecap: round;
-        }
-    </style>
+    .info-status {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-0 sm:p-4 overflow-hidden">
+<body>
 
-    <!-- FRAME CONTAINER -->
-    <div id="deviceFrame" class="relative w-full max-w-[430px] h-[100vh] sm:h-[880px] bg-black sm:rounded-[55px] shadow-2xl border-0 sm:border-[10px] border-[#2c2c2e] overflow-hidden flex flex-col justify-between">
-
-        <!-- DYNAMIC ISLAND HEADER -->
-        <div class="relative z-50 pt-3 px-6 bg-black flex items-center justify-between select-none">
-            <span class="text-xs font-semibold text-white tracking-tight">09:41</span>
-            
-            <div id="dynamicIsland" class="w-[125px] h-[30px] bg-black rounded-full border border-zinc-800/60 flex items-center justify-between px-3">
-                <div class="flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-ios-green animate-pulse"></span>
-                    <span id="islandStatusText" class="text-[10px] font-medium text-zinc-300 truncate max-w-[70px]">NutriScan</span>
-                </div>
-                <i class="fa-solid fa-camera text-ios-green text-[10px]"></i>
-            </div>
-
-            <div class="flex items-center space-x-1.5 text-xs text-white">
-                <i class="fa-solid fa-signal text-[10px]"></i>
-                <i class="fa-solid fa-wifi text-[10px]"></i>
-                <i class="fa-solid fa-battery-full text-xs text-ios-green"></i>
-            </div>
-        </div>
-
-        <!-- APP MAIN VIEWPORT -->
-        <div id="mainViewport" class="flex-1 overflow-y-auto no-scrollbar relative pt-2 pb-24 px-4 space-y-4">
-
-            <!-- ================= TAB 1: DASHBOARD ================= -->
-            <div id="tab-dashboard" class="tab-page space-y-4">
-                <div class="flex items-center justify-between pt-2">
-                    <div>
-                        <p class="text-xs font-medium text-zinc-400 tracking-wide uppercase">Resumen Nutricional</p>
-                        <h1 id="userGreeting" class="text-2xl font-bold text-white tracking-tight">¡Bienvenido!</h1>
-                    </div>
-                    <button onclick="openCalcWizard()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-ios-green">
-                        <i class="fa-solid fa-sliders text-base"></i>
-                    </button>
-                </div>
-
-                <!-- TRIPLE ACTIVITY RING CARD -->
-                <div class="glass-card rounded-3xl p-5 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-bold text-zinc-200">Balance del Día</h3>
-                        <span class="text-xs text-zinc-400 font-mono">Hoy</span>
-                    </div>
-
-                    <div class="flex items-center justify-between py-2">
-                        <div class="relative w-36 h-36 flex items-center justify-center">
-                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
-                                <circle class="ring-bg" cx="60" cy="60" r="50" stroke-width="8" fill="none" />
-                                <circle id="ringCalories" class="ring-circle" cx="60" cy="60" r="50" stroke="#30d158" stroke-width="8" stroke-dasharray="314.15" stroke-dashoffset="314.15" fill="none" />
-                                
-                                <circle class="ring-bg" cx="60" cy="60" r="38" stroke-width="8" fill="none" />
-                                <circle id="ringProtein" class="ring-circle" cx="60" cy="60" r="38" stroke="#64d2ff" stroke-width="8" stroke-dasharray="238.76" stroke-dashoffset="238.76" fill="none" />
-                                
-                                <circle class="ring-bg" cx="60" cy="60" r="26" stroke-width="8" fill="none" />
-                                <circle id="ringCarbs" class="ring-circle" cx="60" cy="60" r="26" stroke="#ffd60a" stroke-width="8" stroke-dasharray="163.36" stroke-dashoffset="163.36" fill="none" />
-                            </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span id="dashCalRemaining" class="text-xl font-extrabold text-white leading-none">2,000</span>
-                                <span class="text-[10px] text-zinc-400 font-medium tracking-wider uppercase mt-1">kcal rest.</span>
-                            </div>
-                        </div>
-
-                        <div class="flex-1 ml-6 space-y-3">
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-ios-green font-semibold"><i class="fa-solid fa-fire mr-1"></i>Calorías</span>
-                                    <span class="text-zinc-300 font-mono"><span id="dashCalCurrent">0</span> / <span id="dashCalTarget">2,000</span></span>
-                                </div>
-                                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div id="barCal" class="h-full bg-ios-green transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-ios-cyan font-semibold"><i class="fa-solid fa-dumbbell mr-1"></i>Proteína</span>
-                                    <span class="text-zinc-300 font-mono"><span id="dashProtCurrent">0</span> / <span id="dashProtTarget">150</span>g</span>
-                                </div>
-                                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div id="barProt" class="h-full bg-ios-cyan transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-ios-yellow font-semibold"><i class="fa-solid fa-wheat-awn mr-1"></i>Carbos</span>
-                                    <span class="text-zinc-300 font-mono"><span id="dashCarbCurrent">0</span> / <span id="dashCarbTarget">200</span>g</span>
-                                </div>
-                                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div id="barCarb" class="h-full bg-ios-yellow transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-ios-red font-semibold"><i class="fa-solid fa-droplet mr-1"></i>Grasas</span>
-                                    <span class="text-zinc-300 font-mono"><span id="dashFatCurrent">0</span> / <span id="dashFatTarget">60</span>g</span>
-                                </div>
-                                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div id="barFat" class="h-full bg-ios-red transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onclick="openCalcWizard()" class="w-full mt-3 py-2.5 rounded-2xl bg-zinc-800/80 text-xs font-semibold text-zinc-300 border border-zinc-700/50 flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-sliders text-ios-green"></i>
-                        <span>Configurar Objetivos Nutricionales</span>
-                    </button>
-                </div>
-
-                <!-- MEALS LOG -->
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-zinc-200">Comidas Registradas Hoy</h3>
-                        <button onclick="switchTab('scan')" class="text-xs text-ios-green font-semibold">
-                            + Escanear Producto
-                        </button>
-                    </div>
-                    <div class="space-y-2.5" id="loggedMealsContainer">
-                        <div id="emptyMealsState" class="glass-card rounded-2xl p-6 text-center space-y-2">
-                            <i class="fa-solid fa-utensils text-zinc-600 text-2xl"></i>
-                            <p class="text-xs text-zinc-400 font-medium">Aún no has registrado ninguna comida hoy.</p>
-                            <p class="text-[11px] text-zinc-500">Usa la cámara para escanear una etiqueta o añade desde tu despensa.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ================= TAB 2: REAL CAMERA OCR SCANNER ================= -->
-            <div id="tab-scan" class="tab-page hidden space-y-4">
-                <div class="pt-2 flex items-center justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold text-white tracking-tight">Escáner de Etiquetas</h1>
-                        <p class="text-xs text-zinc-400">Reconocimiento Nutricional en Tiempo Real</p>
-                    </div>
-                    <button onclick="startRealCamera()" class="px-3 py-1.5 bg-ios-green/20 border border-ios-green text-ios-green rounded-xl text-xs font-bold flex items-center space-x-1">
-                        <i class="fa-solid fa-video"></i>
-                        <span>Activar Cámara</span>
-                    </button>
-                </div>
-
-                <!-- CAMERA VIEWPORT -->
-                <div class="relative w-full h-[380px] bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl flex items-center justify-center">
-                    
-                    <!-- REAL VIDEO ELEMENT -->
-                    <video id="cameraVideo" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover hidden"></video>
-
-                    <!-- FALLBACK PLACEHOLDER -->
-                    <div id="cameraPlaceholder" class="text-center p-6 space-y-3">
-                        <div class="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center mx-auto text-ios-green text-2xl animate-pulse">
-                            <i class="fa-solid fa-camera"></i>
-                        </div>
-                        <p class="text-xs text-zinc-400">Pulsa <b>"Activar Cámara"</b> para autorizar el visor en vivo</p>
-                    </div>
-
-                    <!-- SCANNING OVERLAY -->
-                    <div id="cameraOverlay" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 hidden">
-                        <div class="flex justify-between">
-                            <div class="w-8 h-8 border-t-2 border-l-2 border-ios-green rounded-tl-xl"></div>
-                            <div class="w-8 h-8 border-t-2 border-r-2 border-ios-green rounded-tr-xl"></div>
-                        </div>
-
-                        <div class="self-center w-[85%] h-[180px] border-2 border-dashed border-ios-green/60 rounded-2xl relative p-3 flex flex-col justify-around bg-black/20 backdrop-blur-[2px]">
-                            <div class="scan-laser-line"></div>
-                            <span class="text-[10px] text-zinc-200 text-center font-mono bg-black/60 py-1 rounded">Apunta a la tabla nutricional posterior</span>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <div class="w-8 h-8 border-b-2 border-l-2 border-ios-green rounded-bl-xl"></div>
-                            <div class="w-8 h-8 border-b-2 border-r-2 border-ios-green rounded-br-xl"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CAPTURE ACTION BUTTON -->
-                <button onclick="captureAndProcessLabel()" id="captureBtn" class="w-full py-3 rounded-2xl bg-ios-green text-black font-extrabold text-xs uppercase tracking-wide flex items-center justify-center space-x-2 shadow-lg hidden">
-                    <i class="fa-solid fa-expand text-sm"></i>
-                    <span>Escanear y Leer Etiqueta</span>
-                </button>
-
-                <!-- SCANNED RESULT CARD -->
-                <div id="scanResultCard" class="hidden glass-card rounded-3xl p-4 space-y-3 border border-ios-green/40">
-                    <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-circle-check text-ios-green text-base"></i>
-                            <h3 id="scannedTitle" class="text-sm font-bold text-white">Producto Detectado</h3>
-                        </div>
-                        <span class="text-[10px] font-mono text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">Por 100g</span>
-                    </div>
-
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                        <div class="bg-zinc-900/80 p-2 rounded-2xl border border-zinc-800">
-                            <span class="text-[10px] text-zinc-400 block">Kcal</span>
-                            <span id="scannedCal" class="text-sm font-bold text-ios-green">145</span>
-                        </div>
-                        <div class="bg-zinc-900/80 p-2 rounded-2xl border border-zinc-800">
-                            <span class="text-[10px] text-zinc-400 block">Prot</span>
-                            <span id="scannedProt" class="text-sm font-bold text-ios-cyan">12.5g</span>
-                        </div>
-                        <div class="bg-zinc-900/80 p-2 rounded-2xl border border-zinc-800">
-                            <span class="text-[10px] text-zinc-400 block">Carb</span>
-                            <span id="scannedCarb" class="text-sm font-bold text-ios-yellow">18.0g</span>
-                        </div>
-                        <div class="bg-zinc-900/80 p-2 rounded-2xl border border-zinc-800">
-                            <span class="text-[10px] text-zinc-400 block">Grasa</span>
-                            <span id="scannedFat" class="text-sm font-bold text-ios-red">3.2g</span>
-                        </div>
-                    </div>
-
-                    <button onclick="saveScannedFoodToPantry()" class="w-full py-2.5 rounded-2xl bg-ios-green text-black font-bold text-xs">
-                        Guardar en Mis Alimentos
-                    </button>
-                </div>
-            </div>
-
-            <!-- ================= TAB 3: PANTRY ================= -->
-            <div id="tab-pantry" class="tab-page hidden space-y-4">
-                <div class="flex items-center justify-between pt-2">
-                    <div>
-                        <h1 class="text-2xl font-bold text-white tracking-tight">Despensa Verificada</h1>
-                        <p class="text-xs text-zinc-400">Productos escaneados y guardados</p>
-                    </div>
-                    <span id="pantryCountBadge" class="bg-ios-green/20 text-ios-green border border-ios-green/30 text-xs font-bold px-2.5 py-1 rounded-full">3 Alimentos</span>
-                </div>
-                <div class="space-y-3" id="pantryItemsList"></div>
-            </div>
-
-            <!-- ================= TAB 4: PROFILE ================= -->
-            <div id="tab-profile" class="tab-page hidden space-y-4">
-                <div class="pt-2">
-                    <h1 class="text-2xl font-bold text-white tracking-tight">Perfil de Usuario</h1>
-                </div>
-
-                <div class="glass-card rounded-3xl p-4 flex items-center space-x-4">
-                    <div id="profileAvatar" class="w-14 h-14 rounded-full bg-gradient-to-tr from-ios-green to-ios-cyan flex items-center justify-center text-black font-extrabold text-xl">U</div>
-                    <div>
-                        <h2 id="profileNameDisplay" class="text-base font-bold text-white">Usuario Demo</h2>
-                        <p id="profileDetailsDisplay" class="text-xs text-zinc-400 font-mono">Definir Perfil en Ajustes</p>
-                    </div>
-                </div>
-
-                <div onclick="openCalcWizard()" class="glass-card rounded-3xl p-5 border border-ios-green/30 cursor-pointer flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-2xl bg-ios-green/20 text-ios-green flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-sliders"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-white">Ajustar Metas Nutricionales</h3>
-                            <p class="text-xs text-zinc-400">Manual, Guiado o Calculadora TDEE Pro</p>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-zinc-500"></i>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- BOTTOM TAB BAR -->
-        <div class="glass-nav relative z-40 px-3 py-2 flex items-center justify-around select-none">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center space-y-1 text-ios-green">
-                <i class="fa-solid fa-chart-pie text-lg"></i>
-                <span class="text-[10px] font-medium">Hoy</span>
-            </button>
-            <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn flex flex-col items-center space-y-1 text-zinc-500">
-                <i class="fa-solid fa-camera text-lg"></i>
-                <span class="text-[10px] font-medium">Escanear</span>
-            </button>
-            <button onclick="switchTab('pantry')" id="nav-pantry" class="nav-btn flex flex-col items-center space-y-1 text-zinc-500">
-                <i class="fa-solid fa-box-archive text-lg"></i>
-                <span class="text-[10px] font-medium">Despensa</span>
-            </button>
-            <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn flex flex-col items-center space-y-1 text-zinc-500">
-                <i class="fa-solid fa-user text-lg"></i>
-                <span class="text-[10px] font-medium">Perfil</span>
-            </button>
-        </div>
-
-        <div class="w-full pb-1 bg-black flex justify-center">
-            <div class="w-32 h-1 bg-zinc-600/80 rounded-full"></div>
-        </div>
-
+  <div class="contenedor">
+    <h1>Vista de Cámara</h1>
+    
+    <div class="video-wrapper">
+      <video id="webcam" autoplay playsinline muted></video>
     </div>
 
-    <!-- ================= MODAL: MULTI-MODE GOAL WIZARD ================= -->
-    <div id="calcWizardModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-md glass-card rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar border border-zinc-700 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-sliders text-ios-green text-lg"></i>
-                    <h3 class="text-base font-bold text-white">Configurar Metas Diarias</h3>
-                </div>
-                <button onclick="closeCalcWizard()" class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark text-xs"></i>
-                </button>
-            </div>
+    <p id="status" class="info-status">Cargando cámara...</p>
+  </div>
 
-            <!-- MODE SELECTOR -->
-            <div class="grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded-2xl border border-zinc-800 text-[11px] font-semibold text-center">
-                <button type="button" onclick="setMode('manual')" id="modeManualBtn" class="py-2 rounded-xl bg-ios-green text-black font-bold">✍️ Manual</button>
-                <button type="button" onclick="setMode('easy')" id="modeEasyBtn" class="py-2 rounded-xl text-zinc-400">🌱 Guiado</button>
-                <button type="button" onclick="setMode('tdee')" id="modeTdeeBtn" class="py-2 rounded-xl text-zinc-400">🔬 TDEE Pro</button>
-            </div>
+  <script>
+    const video = document.getElementById('webcam');
+    const statusText = document.getElementById('status');
 
-            <!-- MANUAL INPUT MODE -->
-            <div id="sectionManual" class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-zinc-400 font-semibold mb-1">Nombre del Usuario</label>
-                    <input type="text" id="userNameInput" value="Usuario Demo" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-white font-bold outline-none focus:border-ios-green">
-                </div>
-                <div>
-                    <label class="block text-zinc-400 font-semibold mb-1">Calorías Totales Diarias (kcal)</label>
-                    <input type="number" id="manualCal" value="2000" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2.5 text-white font-mono font-bold text-base outline-none focus:border-ios-green">
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Proteínas (g)</label>
-                        <input type="number" id="manualProt" value="150" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-ios-cyan font-mono font-bold text-center outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Carbos (g)</label>
-                        <input type="number" id="manualCarb" value="200" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-ios-yellow font-mono font-bold text-center outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Grasas (g)</label>
-                        <input type="number" id="manualFat" value="60" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-ios-red font-mono font-bold text-center outline-none">
-                    </div>
-                </div>
-            </div>
+    // Configuración para pedir Alta Resolución (Full HD / HD)
+    const opcionesCamaraHD = {
+      video: {
+        width: { min: 1280, ideal: 1920 },
+        height: { min: 720, ideal: 1080 },
+        frameRate: { ideal: 30, max: 60 },
+        facingMode: "user"
+      },
+      audio: false
+    };
 
-            <!-- EASY GUIDED MODE -->
-            <div id="sectionEasy" class="space-y-3 text-xs hidden">
-                <div>
-                    <label class="block text-zinc-400 font-semibold mb-1">Objetivo Principal</label>
-                    <select id="easyGoal" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2.5 text-white font-semibold outline-none">
-                        <option value="lose">Perder Grasa (Déficit - 1,800 kcal)</option>
-                        <option value="maintain" selected>Mantenimiento Saludable (2,000 kcal)</option>
-                        <option value="gain">Ganar Masa Muscular (Superávit - 2,400 kcal)</option>
-                    </select>
-                </div>
-            </div>
+    async function iniciarCamara() {
+      try {
+        // Intentar cargar cámara en alta resolución
+        const stream = await navigator.mediaDevices.getUserMedia(opcionesCamaraHD);
+        aplicarStream(stream);
+      } catch (err) {
+        console.warn("No se pudo iniciar en HD, cargando modo estándar compatible:", err);
+        intentarCamaraEstandar();
+      }
+    }
 
-            <!-- TDEE PRO MODE -->
-            <div id="sectionTdee" class="space-y-3 text-xs hidden">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Peso (kg)</label>
-                        <input type="number" id="tdeeWeight" value="75" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-white font-mono font-bold outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Altura (cm)</label>
-                        <input type="number" id="tdeeHeight" value="178" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-white font-mono font-bold outline-none">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Edad</label>
-                        <input type="number" id="tdeeAge" value="28" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-3 py-2 text-white font-mono font-bold outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-zinc-400 font-semibold mb-1">Nivel de Actividad</label>
-                        <select id="tdeeActivity" class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-2.5 py-2 text-white font-semibold outline-none">
-                            <option value="1.2">Sedentario</option>
-                            <option value="1.375">Moderado (1-3 días)</option>
-                            <option value="1.55" selected>Activo (3-5 días)</option>
-                            <option value="1.725">Muy Activo</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="applyGoals()" class="w-full py-3 rounded-2xl bg-ios-green text-black font-extrabold text-xs uppercase tracking-wide">
-                Guardar y Aplicar a mi Perfil
-            </button>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        let videoStream = null;
-        let currentMode = 'manual';
-
-        let appState = {
-            user: { name: 'Usuario Demo', details: 'Ajustes por defecto' },
-            targets: { calories: 2000, protein: 150, carbs: 200, fat: 60 },
-            consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-            pantry: [
-                { id: 1, name: 'Yogur Griego 0% Hacendado', cal100: 57, prot100: 10, carb100: 4, fat100: 0.2 },
-                { id: 2, name: 'Whey Protein Isolate 90%', cal100: 370, prot100: 88, carb100: 2.5, fat100: 1 },
-                { id: 3, name: 'Avena Integral Suave', cal100: 365, prot100: 13.5, carb100: 58.7, fat100: 7.0 }
-            ],
-            loggedMeals: []
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateDashboardRingsAndValues();
-            renderLoggedMeals();
-            renderPantryList();
-            updateUserProfileDisplay();
+    function intentarCamaraEstandar() {
+      // Respaldo en resolución estándar si el dispositivo no soporta HD
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          aplicarStream(stream);
+        })
+        .catch(err => {
+          console.error("Error definitivo al acceder a la cámara:", err);
+          statusText.innerText = "Error: No se pudo acceder a la cámara. Revisa los permisos.";
+          statusText.style.color = "#f87171";
         });
+    }
 
-        // REAL CAMERA IMPLEMENTATION
-        async function startRealCamera() {
-            try {
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
+    function aplicarStream(stream) {
+      video.srcObject = stream;
+      
+      const track = stream.getVideoTracks()[0];
+      const config = track.getSettings();
+      
+      if (config.width && config.height) {
+        statusText.innerText = `Cámara activa (${config.width}x${config.height} px)`;
+      } else {
+        statusText.innerText = "Cámara activa";
+      }
+    }
 
-                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const videoEl = document.getElementById('cameraVideo');
-                videoEl.srcObject = videoStream;
-                videoEl.classList.remove('hidden');
-                document.getElementById('cameraPlaceholder').classList.add('hidden');
-                document.getElementById('cameraOverlay').classList.remove('hidden');
-                document.getElementById('captureBtn').classList.remove('hidden');
-            } catch (err) {
-                alert("Para usar la cámara de tu teléfono, autoriza el acceso a la cámara o ejecuta bajo HTTPS.");
-            }
-        }
+    // Iniciar cámara al cargar la página
+    iniciarCamara();
+  </script>
 
-        function captureAndProcessLabel() {
-            const sampleProducts = [
-                { name: 'Pechuga de Pavo Extra 92%', cal: 105, prot: 22, carb: 1.2, fat: 1.5 },
-                { name: 'Kéfir Natural Hacendado', cal: 48, prot: 3.8, carb: 4.1, fat: 1.8 },
-                { name: 'Atún Claro al Natural', cal: 101, prot: 23, carb: 0, fat: 0.9 }
-            ];
-            const randomProd = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
-
-            document.getElementById('scannedTitle').textContent = randomProd.name;
-            document.getElementById('scannedCal').textContent = randomProd.cal;
-            document.getElementById('scannedProt').textContent = `${randomProd.prot}g`;
-            document.getElementById('scannedCarb').textContent = `${randomProd.carb}g`;
-            document.getElementById('scannedFat').textContent = `${randomProd.fat}g`;
-            
-            document.getElementById('scanResultCard').classList.remove('hidden');
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-page').forEach(page => page.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-ios-green');
-                btn.classList.add('text-zinc-500');
-            });
-
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if (activeNav) {
-                activeNav.classList.remove('text-zinc-500');
-                activeNav.classList.add('text-ios-green');
-            }
-        }
-
-        function saveScannedFoodToPantry() {
-            const name = document.getElementById('scannedTitle').textContent;
-            const cal100 = parseFloat(document.getElementById('scannedCal').textContent);
-            const prot100 = parseFloat(document.getElementById('scannedProt').textContent);
-            const carb100 = parseFloat(document.getElementById('scannedCarb').textContent);
-            const fat100 = parseFloat(document.getElementById('scannedFat').textContent);
-
-            appState.pantry.unshift({ id: Date.now(), name, cal100, prot100, carb100, fat100 });
-            renderPantryList();
-            document.getElementById('scanResultCard').classList.add('hidden');
-            switchTab('pantry');
-        }
-
-        function addFoodToMeals(id, grams) {
-            const item = appState.pantry.find(p => p.id === id);
-            if (!item) return;
-
-            const factor = grams / 100;
-            const meal = {
-                id: Date.now(),
-                name: item.name,
-                grams: grams,
-                cal: Math.round(item.cal100 * factor),
-                prot: parseFloat((item.prot100 * factor).toFixed(1)),
-                carb: parseFloat((item.carb100 * factor).toFixed(1)),
-                fat: parseFloat((item.fat100 * factor).toFixed(1))
-            };
-
-            appState.loggedMeals.unshift(meal);
-            appState.consumed.calories += meal.cal;
-            appState.consumed.protein += meal.prot;
-            appState.consumed.carbs += meal.carb;
-            appState.consumed.fat += meal.fat;
-
-            updateDashboardRingsAndValues();
-            renderLoggedMeals();
-            switchTab('dashboard');
-        }
-
-        function removeMeal(id) {
-            const index = appState.loggedMeals.findIndex(m => m.id === id);
-            if (index !== -1) {
-                const removed = appState.loggedMeals.splice(index, 1)[0];
-                appState.consumed.calories = Math.max(0, appState.consumed.calories - removed.cal);
-                appState.consumed.protein = Math.max(0, appState.consumed.protein - removed.prot);
-                appState.consumed.carbs = Math.max(0, appState.consumed.carbs - removed.carb);
-                appState.consumed.fat = Math.max(0, appState.consumed.fat - removed.fat);
-                updateDashboardRingsAndValues();
-                renderLoggedMeals();
-            }
-        }
-
-        function updateDashboardRingsAndValues() {
-            // Numbers
-            document.getElementById('userGreeting').textContent = `¡Hola, ${appState.user.name.split(' ')[0]}!`;
-            document.getElementById('dashCalCurrent').textContent = Math.round(appState.consumed.calories);
-            document.getElementById('dashCalTarget').textContent = appState.targets.calories;
-            
-            const remaining = Math.max(0, appState.targets.calories - Math.round(appState.consumed.calories));
-            document.getElementById('dashCalRemaining').textContent = remaining.toLocaleString();
-
-            document.getElementById('dashProtCurrent').textContent = Math.round(appState.consumed.protein);
-            document.getElementById('dashProtTarget').textContent = appState.targets.protein;
-
-            document.getElementById('dashCarbCurrent').textContent = Math.round(appState.consumed.carbs);
-            document.getElementById('dashCarbTarget').textContent = appState.targets.carbs;
-
-            document.getElementById('dashFatCurrent').textContent = Math.round(appState.consumed.fat);
-            document.getElementById('dashFatTarget').textContent = appState.targets.fat;
-
-            // Bar Progress
-            document.getElementById('barCal').style.width = `${Math.min(100, (appState.consumed.calories / appState.targets.calories) * 100)}%`;
-            document.getElementById('barProt').style.width = `${Math.min(100, (appState.consumed.protein / appState.targets.protein) * 100)}%`;
-            document.getElementById('barCarb').style.width = `${Math.min(100, (appState.consumed.carbs / appState.targets.carbs) * 100)}%`;
-            document.getElementById('barFat').style.width = `${Math.min(100, (appState.consumed.fat / appState.targets.fat) * 100)}%`;
-
-            // SVG Rings Math
-            setRingOffset('ringCalories', 314.15, appState.consumed.calories, appState.targets.calories);
-            setRingOffset('ringProtein', 238.76, appState.consumed.protein, appState.targets.protein);
-            setRingOffset('ringCarbs', 163.36, appState.consumed.carbs, appState.targets.carbs);
-        }
-
-        function setRingOffset(elementId, circumference, current, target) {
-            const circle = document.getElementById(elementId);
-            if (!circle) return;
-            const pct = Math.min(1, current / target);
-            const offset = circumference - (pct * circumference);
-            circle.style.strokeDashoffset = offset;
-        }
-
-        function renderLoggedMeals() {
-            const container = document.getElementById('loggedMealsContainer');
-            if (appState.loggedMeals.length === 0) {
-                container.innerHTML = `
-                    <div id="emptyMealsState" class="glass-card rounded-2xl p-6 text-center space-y-2">
-                        <i class="fa-solid fa-utensils text-zinc-600 text-2xl"></i>
-                        <p class="text-xs text-zinc-400 font-medium">Aún no has registrado ninguna comida hoy.</p>
-                        <p class="text-[11px] text-zinc-500">Usa la cámara para escanear una etiqueta o añade desde tu despensa.</p>
-                    </div>`;
-                return;
-            }
-
-            container.innerHTML = appState.loggedMeals.map(meal => `
-                <div class="glass-card rounded-2xl p-3 flex items-center justify-between">
-                    <div>
-                        <h4 class="text-xs font-bold text-white">${meal.name}</h4>
-                        <p class="text-[10px] text-zinc-400 font-mono">${meal.grams}g • <span class="text-ios-green">${meal.cal} kcal</span> • P:${meal.prot}g C:${meal.carb}g G:${meal.fat}g</p>
-                    </div>
-                    <button onclick="removeMeal(${meal.id})" class="text-zinc-500 hover:text-ios-red p-2">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function renderPantryList() {
-            const container = document.getElementById('pantryItemsList');
-            document.getElementById('pantryCountBadge').textContent = `${appState.pantry.length} Alimentos`;
-
-            container.innerHTML = appState.pantry.map(item => `
-                <div class="glass-card rounded-2xl p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold text-white">${item.name}</h3>
-                        <span class="text-[10px] text-zinc-400 font-mono bg-zinc-800 px-2 py-0.5 rounded">100g = ${item.cal100} kcal</span>
-                    </div>
-                    <div class="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
-                        <span>P: ${item.prot100}g</span>
-                        <span>C: ${item.carb100}g</span>
-                        <span>G: ${item.fat100}g</span>
-                    </div>
-                    <div class="flex items-center space-x-2 pt-1 border-t border-zinc-800/60">
-                        <input type="number" id="grams-${item.id}" value="100" class="w-20 bg-zinc-900 border border-zinc-800 rounded-xl px-2 py-1 text-xs text-center text-white font-mono outline-none">
-                        <span class="text-xs text-zinc-400">gramos</span>
-                        <button onclick="addFoodToMeals(${item.id}, parseFloat(document.getElementById('grams-${item.id}').value) || 100)" class="flex-1 py-1.5 bg-ios-green text-black rounded-xl text-xs font-bold flex items-center justify-center space-x-1">
-                            <i class="fa-solid fa-plus text-[10px]"></i>
-                            <span>Añadir a Hoy</span>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // GOAL WIZARD LOGIC
-        function openCalcWizard() {
-            document.getElementById('calcWizardModal').classList.remove('hidden');
-        }
-
-        function closeCalcWizard() {
-            document.getElementById('calcWizardModal').classList.add('hidden');
-        }
-
-        function setMode(mode) {
-            currentMode = mode;
-            ['Manual', 'Easy', 'Tdee'].forEach(m => {
-                const btn = document.getElementById(`mode${m}Btn`);
-                const sec = document.getElementById(`section${m}`);
-                if (m.toLowerCase() === mode) {
-                    btn.className = 'py-2 rounded-xl bg-ios-green text-black font-bold';
-                    sec.classList.remove('hidden');
-                } else {
-                    btn.className = 'py-2 rounded-xl text-zinc-400';
-                    sec.classList.add('hidden');
-                }
-            });
-        }
-
-        function applyGoals() {
-            const nameInput = document.getElementById('userNameInput').value.trim();
-            if (nameInput) appState.user.name = nameInput;
-
-            if (currentMode === 'manual') {
-                appState.targets.calories = parseInt(document.getElementById('manualCal').value) || 2000;
-                appState.targets.protein = parseInt(document.getElementById('manualProt').value) || 150;
-                appState.targets.carbs = parseInt(document.getElementById('manualCarb').value) || 200;
-                appState.targets.fat = parseInt(document.getElementById('manualFat').value) || 60;
-                appState.user.details = 'Ajuste Manual Personalizado';
-            } else if (currentMode === 'easy') {
-                const goal = document.getElementById('easyGoal').value;
-                if (goal === 'lose') {
-                    appState.targets = { calories: 1800, protein: 160, carbs: 150, fat: 50 };
-                    appState.user.details = 'Objetivo: Déficit Calórico';
-                } else if (goal === 'gain') {
-                    appState.targets = { calories: 2400, protein: 170, carbs: 280, fat: 70 };
-                    appState.user.details = 'Objetivo: Masa Muscular';
-                } else {
-                    appState.targets = { calories: 2000, protein: 140, carbs: 210, fat: 60 };
-                    appState.user.details = 'Objetivo: Mantenimiento';
-                }
-            } else if (currentMode === 'tdee') {
-                const w = parseFloat(document.getElementById('tdeeWeight').value) || 75;
-                const h = parseFloat(document.getElementById('tdeeHeight').value) || 178;
-                const a = parseFloat(document.getElementById('tdeeAge').value) || 28;
-                const act = parseFloat(document.getElementById('tdeeActivity').value) || 1.55;
-
-                // Mifflen-St Jeor Calculation
-                const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
-                const tdee = Math.round(bmr * act);
-
-                appState.targets.calories = tdee;
-                appState.targets.protein = Math.round(w * 2.0); // 2g per kg
-                appState.targets.fat = Math.round(w * 0.9);     // 0.9g per kg
-                const remainingCal = tdee - ((appState.targets.protein * 4) + (appState.targets.fat * 9));
-                appState.targets.carbs = Math.max(50, Math.round(remainingCal / 4));
-                appState.user.details = `TDEE Pro (${w}kg, ${h}cm)`;
-            }
-
-            updateUserProfileDisplay();
-            updateDashboardRingsAndValues();
-            closeCalcWizard();
-        }
-
-        function updateUserProfileDisplay() {
-            document.getElementById('profileNameDisplay').textContent = appState.user.name;
-            document.getElementById('profileDetailsDisplay').textContent = appState.user.details;
-            document.getElementById('profileAvatar').textContent = appState.user.name.charAt(0).toUpperCase();
-        }
-    </script>
 </body>
 </html>
